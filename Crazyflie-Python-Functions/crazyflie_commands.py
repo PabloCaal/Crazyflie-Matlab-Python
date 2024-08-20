@@ -1,9 +1,3 @@
-#  UNIVERSIDAD DEL VALLE DE GUATEMALA
-#  Proyecto de Graduación
-#  Pablo Javier Caal Leiva
-#
-#  crazyflie_commands.py
-
 """
 Script de Python con la librería Cflib de Bitcraze y funciones básicas 
 para el control de los drones Crazyflie. Esto forma parte del trabajo de 
@@ -25,28 +19,76 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.crazyflie.high_level_commander import HighLevelCommander
 
-# Inicializa los controladores de la radio
 cflib.crtp.init_drivers(enable_debug_driver=False)
 
-# Redefinición del logger para que no muestre el traceback
 logging.basicConfig(level=logging.CRITICAL)
    
 def error_callback(error):
     print(f"Link error: {error}")
 
-def connect_crazyflie(uri):
+def connect(uri):
+    """
+    Connects to the Crazyflie at the specified URI.
+    
+    Parameters:
+    uri (str): The URI of the Crazyflie to connect to.
+    
+    Returns:
+    scf (SyncCrazyflie): The connected SyncCrazyflie object if successful.
+    int: A numeric code indicating the error if the connection fails.
+    """
     try:
+        # Attempt to create a SyncCrazyflie instance and open a link to the Crazyflie
         scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
         scf.open_link()
         return scf
+    
     except Exception as e:
+        # Handle specific error cases and return a corresponding numeric code
         if 'Cannot find a Crazyradio Dongle' in str(e):
-            return 1
+            return 1  # Error code 1: Crazyradio Dongle not found
+        elif 'Connection refused' in str(e):
+            return 2  # Error code 2: Connection refused
+        elif 'Timeout' in str(e):
+            return 3  # Error code 3: Connection timed out
         else:
-            return 0
+            return 0  # Error code 0: General error
+
 
 def disconnect_crazyflie(scf):
     scf.close_link()
+
+def takeoff(scf, height, duration):
+    commander = HighLevelCommander(scf.cf)
+    commander.takeoff(absolute_height_m=height, duration_s=duration)
+    time.sleep(duration) 
+    return True
+
+def takeoff2(scf, height, velocity):
+    with MotionCommander(scf) as mc:
+        mc.move_distance(0, 0, height, velocity)
+    return True
+
+def land(scf, height, duration):
+    commander = HighLevelCommander(scf.cf)
+    commander.land(absolute_height_m=height, duration_s=duration)
+
+    time.sleep(duration)
+
+    commander.stop()
+    return True
+
+def send_position(scf, x, y, z):
+    commander = scf.cf.high_level_commander
+    commander.go_to(x, y, z, 0.0, 3.0)  
+    time.sleep(1) 
+    return True
+
+def send_position_2(scf, x, y, z, duration):
+    commander = scf.cf.high_level_commander
+    commander.go_to(x, y, z, 0.0, duration)  
+    time.sleep(duration) 
+    return True
 
 def get_position(scf):
     position_log_config = LogConfig(name='Position', period_in_ms=100)
@@ -81,129 +123,7 @@ def get_position(scf):
 
     return [position['x'], position['y'], position['z']]
 
-def send_position(scf, x, y, z):
-    commander = scf.cf.high_level_commander
-    commander.go_to(x, y, z, 0.0, 3.0)  
-    time.sleep(1) 
-    return True
-
-def send_position_2(scf, x, y, z, duration):
-    commander = scf.cf.high_level_commander
-    commander.go_to(x, y, z, 0.0, duration)  
-    time.sleep(duration) 
-    return True
-
 def update_position(scf, x, y, z):
     scf.cf.extpos.send_extpos(x, y, z)
     time.sleep(0.1) 
     return True
-
-def takeoff(scf, height, duration):
-    commander = HighLevelCommander(scf.cf)
-    commander.takeoff(absolute_height_m=height, duration_s=duration)
-    time.sleep(duration) 
-    return True
-
-def takeoff2(scf, height, velocity):
-    with MotionCommander(scf) as mc:
-        mc.move_distance(0, 0, height, velocity)
-    return True
-
-def land(scf, height, duration):
-    commander = HighLevelCommander(scf.cf)
-    commander.land(absolute_height_m=height, duration_s=duration)
-
-    time.sleep(duration)
-
-    commander.stop()
-    return True
-
-def motor_health_test(scf):
-    log_config = LogConfig(name='PropellerTest', period_in_ms=100)
-    log_config.add_variable('motor.m1_variance', 'float')
-    log_config.add_variable('motor.m2_variance', 'float')
-    log_config.add_variable('motor.m3_variance', 'float')
-    log_config.add_variable('motor.m4_variance', 'float')
-    log_config.add_variable('motor.m1_voltage_sag', 'float')
-    log_config.add_variable('motor.m2_voltage_sag', 'float')
-    log_config.add_variable('motor.m3_voltage_sag', 'float')
-    log_config.add_variable('motor.m4_voltage_sag', 'float')
-
-
-    # Diccionario para almacenar los resultados del test
-    motor_results = {
-        'Motor M1': {'variance': 0.0, 'voltage_sag': 0.0},
-        'Motor M2': {'variance': 0.0, 'voltage_sag': 0.0},
-        'Motor M3': {'variance': 0.0, 'voltage_sag': 0.0},
-        'Motor M4': {'variance': 0.0, 'voltage_sag': 0.0}
-    }
-    log_event = Event()
-
-    def log_callback(timestamp, data, logconf):
-        motor_results['Motor M1']['variance'] = data['motor.m1_variance']
-        motor_results['Motor M2']['variance'] = data['motor.m2_variance']
-        motor_results['Motor M3']['variance'] = data['motor.m3_variance']
-        motor_results['Motor M4']['variance'] = data['motor.m4_variance']
-        motor_results['Motor M1']['voltage_sag'] = data['motor.m1_voltage_sag']
-        motor_results['Motor M2']['voltage_sag'] = data['motor.m2_voltage_sag']
-        motor_results['Motor M3']['voltage_sag'] = data['motor.m3_voltage_sag']
-        motor_results['Motor M4']['voltage_sag'] = data['motor.m4_voltage_sag']
-        log_event.set()   
-    
-    try:
-        scf.cf.log.add_config(log_config)
-        log_config.data_received_cb.add_callback(log_callback)
-
-        commander = scf.cf.high_level_commander
-        log_config.start()
-        print("Iniciando el propeller test...")
-        for thrust in range(20000, 50001, 10000):
-            print(f"Estableciendo thrust a: {thrust}")
-            commander.send_setpoint(0, 0, 0, thrust)
-            time.sleep(1)  
-
-        commander.send_setpoint(0, 0, 0, 0) 
-        log_event.wait(2) 
-
-        log_config.stop()
-
-    except Exception as e:
-        print(f'Error: {str(e)}')
-
-    return motor_results
-
-
-
-
-
-
-
-
-# FUNCIONES POR PROBAR
-
-def update_position2(scf, x, y, z):
-    """
-    Envía una nueva posición externa al Crazyflie.
-
-    Args:
-        scf (SyncCrazyflie): Objeto de la conexión sincronizada.
-        x (float): Coordenada X de la nueva posición.
-        y (float): Coordenada Y de la nueva posición.
-        z (float): Coordenada Z de la nueva posición.
-
-    Returns:
-        bool: True si se envió correctamente.
-    """
-    position_updated = Event()
-
-    def position_sent_callback():
-        """
-        Callback que se llama cuando la posición ha sido enviada.
-        """
-        position_updated.set()
-
-    scf.cf.extpos.send_extpos(x, y, z)
-    scf.cf.extpos.set_send_extpos_cb(position_sent_callback)
-    position_updated.wait(timeout=1.0)  # Espera hasta 1 segundo para la confirmación
-
-    return position_updated.is_set()
