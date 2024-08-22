@@ -186,6 +186,19 @@ def send_position(scf, x, y, z, velocity=0.5):
         return 2  # Error code 2: General error
 
 def get_position(scf):
+    """
+    Retrieves the current position of the Crazyflie.
+    
+    Parameters:
+    scf (SyncCrazyflie): The SyncCrazyflie object representing the connection to the Crazyflie.
+    
+    Returns:
+    list: A list containing the pose of the Crazyflie as [x, y, z].
+          x, y, z are the coordinates in meters.
+    int: A numeric code indicating an error if retrieval fails.
+         1 - Error in retrieving data
+         2 - General error occurred
+    """
     position_log_config = LogConfig(name='Position', period_in_ms=100)
     position_log_config.add_variable('stateEstimate.x', 'float')
     position_log_config.add_variable('stateEstimate.y', 'float')
@@ -277,11 +290,6 @@ def get_pose(scf):
     except Exception as e:
         # print(f"ERROR: An error occurred while retrieving the pose: {str(e)}")
         return 2  # General error code
-
-def update_position(scf, x, y, z):
-    scf.cf.extpos.send_extpos(x, y, z)
-    time.sleep(0.1) 
-    return True
 
 def update_position(scf, x, y, z):
     """

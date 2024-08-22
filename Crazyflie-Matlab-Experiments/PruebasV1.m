@@ -32,24 +32,6 @@ t.BusyMode = 'drop';
 t.TimerFcn = @(~,~) updateDronPosition(robotat, agent_id, crazyflie_1);
 start(t);
 
-%% Lectura
-% Arrays para almacenar las lecturas de posición
-num_lecturas = 20;
-pos_Crazyflie = zeros(num_lecturas, 3); 
-pos_OptiTrack = zeros(num_lecturas, 7); 
-
-% Ciclo para realizar lecturas de posición
-for i = 1:num_lecturas
-    try 
-        pos_Crazyflie(i,:) = crazyflie_get_position(crazyflie_1);
-        pos_OptiTrack(i,:) = robotat_get_pose(robotat, agent_id);
-    catch ME
-        disp('Error al obtener posición.');
-        disp(ME.message);
-    end 
-    pause(1); % Periodo de lecturas (20 lecturas * 1 segundo = 20 segundos)
-end
-
 
 %% Desconexión y finalización del timer
 crazyflie_disconnect(crazyflie_1);
