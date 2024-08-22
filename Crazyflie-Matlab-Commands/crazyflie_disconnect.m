@@ -1,8 +1,9 @@
 function crazyflie_disconnect(scf)
-    % Import and reload the Python module to ensure Matlab sees the changes
-    crazyflie_commands = py.importlib.import_module('crazyflie_commands');
-    py.importlib.reload(crazyflie_commands);
-    
+    % Validate the SyncCrazyflie object
+    if ~isa(scf, 'py.cflib.crazyflie.syncCrazyflie.SyncCrazyflie')
+        error('ERROR: Invalid SyncCrazyflie object.');
+    end
+
     % Disconnect from Crazyflie and clear the scf from the workspace
     % Attempt to disconnect from Crazyflie with error handling
     try
@@ -13,3 +14,4 @@ function crazyflie_disconnect(scf)
         error('Error using crazyflie_commands>disconnect_crazyflie: %s', ME.message);
     end
 end
+

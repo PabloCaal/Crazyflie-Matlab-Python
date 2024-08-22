@@ -2,7 +2,7 @@
 % UNIVERSIDAD DEL VALLE DE GUATEMALA
 % Diseño e Innovación en Ingeniería Mecatrónica
 % Prueba de Trayectoria Circular únicamente con Flow Deck
-% 15/08/2024
+% 21/08/2024
 
 %% Conexión, y despegue
 dron_id = 8;    % ID del dron disponible 
@@ -26,7 +26,6 @@ theta = linspace(0, 2*pi, N);
 x = origen(1) + radio * cos(theta);
 y = origen(2) + radio * sin(theta);
 z = origen(3) * ones(1, N);
-
 
 % Mostrar los puntos
 plot3(x, y, z, 'bo-', 'DisplayName', 'Trayectoria Circular');

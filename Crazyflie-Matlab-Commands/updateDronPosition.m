@@ -11,4 +11,3 @@ function updateDronPosition(tcp_obj, agent_id, scf)
         disp(ME.message);
     end 
 end
-
