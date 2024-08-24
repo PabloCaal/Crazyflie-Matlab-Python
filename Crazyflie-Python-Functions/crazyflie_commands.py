@@ -45,7 +45,6 @@ def connect(uri):
         scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
         scf.open_link()
         return scf
-    
     except Exception as e:
         # Handle specific error cases and return a corresponding numeric code
         if 'Cannot find a Crazyradio Dongle' in str(e):
@@ -58,20 +57,7 @@ def connect(uri):
             return 0  # Error code 0: General error
 
 def disconnect(scf):
-    """
-    Disconnects the Crazyflie safely.
-    
-    Parameters:
-    scf (SyncCrazyflie): The SyncCrazyflie object representing the connection to the Crazyflie.
-    
-    Returns:
-    int: A numeric code indicating the result of the disconnection attempt.
-         0 - Successful disconnection
-         1 - The Crazyflie was already disconnected
-         2 - General error occurred during disconnection
-    """
     scf.close_link()
-
 
 def takeoff(scf, height, duration):
     """
@@ -152,9 +138,9 @@ def land(scf, height, duration):
         print(f"ERROR: An error occurred during landing: {str(e)}")
         return 2  # Error code 2: General error
 
-def send_position(scf, x, y, z, velocity=0.5):
+def move_to(scf, x, y, z, velocity=0.5):
     """
-    Sends the Crazyflie to the specified position (x, y, z) using MotionCommander.
+    Move the Crazyflie to the specified position (x, y, z) using MotionCommander.
     
     Parameters:
     scf (SyncCrazyflie): The SyncCrazyflie object representing the connection to the Crazyflie.
