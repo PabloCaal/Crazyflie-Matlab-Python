@@ -2,7 +2,7 @@
 % PROYECTO DE GRADUACIÓN: HERRAMIENTAS DE SOFTWARE PARA CRAZYFLIE
 % Pablo Javier Caal Leiva - 20538
 % -------------------------------------------------------------------------
-% Prueba de traycetoria circular utilizando únicamente el Flow Deck
+% Prueba de trayectoria circular utilizando únicamente el Flow Deck
 % =========================================================================
 
 %% Añadir la carpeta de comandos al path usando una ruta relativa
@@ -10,21 +10,12 @@ addpath('../Crazyflie-Matlab-Commands');
 addpath('../Robotat-Matlab-Commands');
 
 %% Ejecución de prueba de seguimiento de trayectoria circular
-% Conexión con Crazyflie
-dron_id = 8;    % ID del dron disponible 
-crazyflie_1 = crazyflie_connect(dron_id);
-pause(3);
-
-% Take off
-crazyflie_takeoff(crazyflie_1);
-pause(3);
-
-origen = crazyflie_get_position(crazyflie_1);
-%origen = [0,0,1];
+%origen = crazyflie_get_position(crazyflie_1);
+origen = [0,0,1];
 
 % Generación de trayectoria
 N = 40;
-radio = 0.25;
+radio = 0.15;
 theta = linspace(0, 2*pi, N);  
 x = origen(1) + radio * cos(theta);
 y = origen(2) + radio * sin(theta);
@@ -41,12 +32,22 @@ axis([-1 1 -1 1 0 2]);
 view(3);
 
 %% Ejecución de trayectoria
+
+% Conexión con Crazyflie
+dron_id = 8;    % ID del dron disponible 
+crazyflie_1 = crazyflie_connect(dron_id);
+pause(2);
+
+% Take off
+crazyflie_takeoff(crazyflie_1);
+pause(2);
+
 pos_Crazyflie = zeros(N, 3); 
 
 for i = 1:N
-    crazyflie_send_position_2(crazyflie_1, x(i), y(i), z(i));
+    crazyflie_move_to(crazyflie_1, x(i), y(i), z(i));
     pos_Crazyflie(i,:) = crazyflie_get_position(crazyflie_1);
-    pause(0.1);
+    %pause(0.1);
 end
 
 % Aterrizaje

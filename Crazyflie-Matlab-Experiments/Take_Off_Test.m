@@ -5,7 +5,7 @@
 % Prueba de despegue y aterrizaje
 % =========================================================================
 
-%% Añadir la carpeta de comandos al path usando una ruta relativa
+%% Añadir al path las carpetas de comandos usando una ruta relativa
 addpath('../Crazyflie-Matlab-Commands');
 addpath('../Robotat-Matlab-Commands');
 

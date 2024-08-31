@@ -2,35 +2,39 @@
 % PROYECTO DE GRADUACIÓN: HERRAMIENTAS DE SOFTWARE PARA CRAZYFLIE
 % Pablo Javier Caal Leiva - 20538
 % -------------------------------------------------------------------------
-% Script para realizar prueba de comandos crazyflie en Matlab
+% Verificación de comandos crazyflie en Matlab
 % =========================================================================
 
 %% Comando para iniciar conexión PC-Crazyflie
-% Genera la conexión con el Crazyflie con la URI indicada
-% Drones 1 al 12
 crazyflie_1 = crazyflie_connect(8);
 
 %% Comando para finalizar conexión PC-Crazyflie
-% Se desconecta del Crazyflie especificado
 crazyflie_disconnect(crazyflie_1);
 
 %% Comando para realizar el despegue del Crazyflie
-% Función para el despegue inicial
-%crazyflie_takeoff(crazyflie_1);
+crazyflie_takeoff(crazyflie_1);
 
 %% Comando para realizar el aterrizaje del Crazyflie
-% Aterriza al dron de forma segura: desciende y apaga motores
-%crazyflie_land(crazyflie_1);
+crazyflie_land(crazyflie_1);
 
 %% Obtención de posición
 XYZ = crazyflie_get_position(crazyflie_1)
 
 %% Función de envío de posición
-% Envío de coordenas XYZ para actualizar posición
-%crazyflie_send_position(crazyflie_1, -0.2, 0, 0.5);
+crazyflie_move_to(crazyflie_1, -0.2, 0, 0.5);
 
 %% Función para recuperar la pose del Crazyflie
-pose = crazyflie_get_pose(crazyflie_1)
+pose = crazyflie_get_pose(crazyflie_1);
 
 %% Actualización de posición con fuente externa
 crazyflie_update_position(crazyflie_1, 0, 0, 0);
+
+%% Lectura de constantes del controlador PID
+PID = crazyflie_get_pid(crazyflie_1);
+
+%% Definir las nuevas ganancias PID para cada eje
+p_gains = struct('X', 4.5, 'Y', 2.5, 'Z', 2.0);
+i_gains = struct('X', 0.1, 'Y', 0.1, 'Z', 0.2);
+d_gains = struct('X', 0.0, 'Y', 0.0, 'Z', 0.1);
+
+crazyflie_modify_pid(crazyflie_1, p_gains, i_gains, d_gains);

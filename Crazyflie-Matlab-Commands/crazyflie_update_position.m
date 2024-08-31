@@ -22,4 +22,4 @@ function crazyflie_update_position(scf, x, y, z)
     else
         error('ERROR: Unexpected result from Python during the position update.');
     end
-end
+end 

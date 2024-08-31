@@ -36,4 +36,3 @@ function crazyflie_land(scf, height, duration)
         error('ERROR: Unexpected result from Python during landing.');
     end
 end
-

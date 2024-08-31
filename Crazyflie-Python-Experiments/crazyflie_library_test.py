@@ -20,4 +20,4 @@ except Exception as e:
 finally:
     # Asegurar la desconexión del Crazyflie
     cf.close_link()
-    print("Crazyflie desconectado.")
+    print("Crazyflie desconectado.") 

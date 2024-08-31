@@ -1,32 +1,32 @@
-% =========================================================================
+%% =========================================================================
 % PROYECTO DE GRADUACIÓN: HERRAMIENTAS DE SOFTWARE PARA CRAZYFLIE
 % Pablo Javier Caal Leiva - 20538
 % -------------------------------------------------------------------------
-% Prueba de conexión, lectura y desconexión de marker Crazyflie en Robotat
+% Verificación de callbacks para fusión de sensores
 % =========================================================================
+
+%% Añadir al path las carpetas de comandos usando una ruta relativa
+addpath('../Crazyflie-Matlab-Commands');
 addpath('../Robotat-Matlab-Commands');
 
-%% Conexión y definición de número de marker
+%% Evento específico (Event callback)
 robotat = robotat_connect();
-agent_id = 50;  % ID del agente en el ecosistema Robotat
+crazyflie_1 = crazyflie_connect(8);
+agent_id = 50;
 
-%% Desconexión
-robotat_disconnect(robotat);
+% Configurar callback para enviar la posición absoluta al dron usando Robotat
+configureCallback(robotat, "byte", 1, @(src, event) crazyflie_robotat_position_callback(crazyflie_1, src, agent_id));
 
-%% Lectura de pose de marker Crazyflie
-pose = robotat_get_pose(robotat, agent_id)
-
-%% Lectura de pose de marker Crazyflie en ciclo durante N segundos
-Duration = 10; % Duración en segundos
+Duration = 5; % Duración en segundos
 Period = 4; % Lecturas por segundo
 N = Duration*Period; % Cantidad de lecturas
 
-Pose_Robotat = zeros(N, 7); % Array para lecturas de pose de marker
+Pose_Crazyflie = zeros(N, 6); % Array para lecturas de pose de marker
 
 % Ciclo para realizar lecturas de pose del marker
 for i = 1:N
     try 
-        Pose_Robotat(i,:) = robotat_get_pose(robotat, agent_id);
+        Pose_Crazyflie(i,:) = crazyflie_get_pose(crazyflie_1);
     catch ME
         disp('Error al obtener posición.');
         disp(ME.message);
@@ -34,10 +34,19 @@ for i = 1:N
     pause(1/Period); % Delay de freuencia de muestreo
 end
 
+
+%robotat.BytesAvailableFcn = []; 
+
+
+robotat_disconnect(robotat);
+crazyflie_disconnect(crazyflie_1);
+
+%%
+
 %% Gráfica 3D de lecturas
-x_Robotat = Pose_Robotat(:, 1);
-y_Robotat = Pose_Robotat(:, 2);
-z_Robotat = Pose_Robotat(:, 3);
+x_Robotat = Pose_Crazyflie(:, 1);
+y_Robotat = Pose_Crazyflie(:, 2);
+z_Robotat = Pose_Crazyflie(:, 3);
 
 figure;
 plot3(x_Robotat, y_Robotat, z_Robotat, '-*');
@@ -56,3 +65,4 @@ title('Trayectoria del marker en 3D');
 axis equal;
 axis([-2 2 -2.5 2.5 0 3]);
 view(3); 
+

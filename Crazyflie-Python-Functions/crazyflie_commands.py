@@ -302,7 +302,7 @@ def update_position(scf, x, y, z):
         scf.cf.extpos.send_extpos(x, y, z)
         
         # Small delay to ensure the update is processed
-        time.sleep(0.1)
+        time.sleep(0.01)
 
         return 0  # Success: Position update completed successfully
 
@@ -310,3 +310,79 @@ def update_position(scf, x, y, z):
         # Handle any unexpected errors during the update
         # print(f"ERROR: An error occurred during the position update: {str(e)}")
         return 2  # Error code 2: General error
+    
+def get_pid_values(scf):
+    """
+    Retrieves the current PID controller parameters from the Crazyflie for X, Y, Z axes.
+    
+    Parameters:
+    scf (SyncCrazyflie): The SyncCrazyflie object representing the connection to the Crazyflie.
+    
+    Returns:
+    dict: A dictionary containing the PID values for X, Y, Z as {'X': [P, I, D], 'Y': [P, I, D], 'Z': [P, I, D]}.
+    int: A numeric code indicating an error if retrieval fails.
+         1 - General error occurred
+    """
+    try:
+        # Obtener los valores PID para los ejes X, Y, Z
+        pid_values = {
+            'X': [
+                float(scf.cf.param.get_value('posCtlPid.xKp')),
+                float(scf.cf.param.get_value('posCtlPid.xKi')),
+                float(scf.cf.param.get_value('posCtlPid.xKd'))
+            ],
+            'Y': [
+                float(scf.cf.param.get_value('posCtlPid.yKp')),
+                float(scf.cf.param.get_value('posCtlPid.yKi')),
+                float(scf.cf.param.get_value('posCtlPid.yKd'))
+            ],
+            'Z': [
+                float(scf.cf.param.get_value('posCtlPid.zKp')),
+                float(scf.cf.param.get_value('posCtlPid.zKi')),
+                float(scf.cf.param.get_value('posCtlPid.zKd'))
+            ]
+        }
+
+        # Retornar los valores PID organizados por ejes
+        return pid_values
+    
+    except Exception as e:
+        # Retornar un código de error general
+        return 1  # Código de error general
+
+def modify_pid(scf, p_gains, i_gains, d_gains):
+    """
+    Modifies the PID controller parameters on the Crazyflie using an existing connection.
+    
+    Parameters:
+    scf (SyncCrazyflie): The SyncCrazyflie object representing the connection to the Crazyflie.
+    p_gains (dict): A dictionary with proportional gains for X, Y, Z axes.
+    i_gains (dict): A dictionary with integral gains for X, Y, Z axes.
+    d_gains (dict): A dictionary with derivative gains for X, Y, Z axes.
+    
+    Returns:
+    int: A numeric code indicating the result of the operation.
+         0 - Success
+         1 - Parameter setting failed
+    """
+    try:       
+        # X Axis
+        scf.cf.param.set_value('posCtlPid.xKp', p_gains['X'])
+        scf.cf.param.set_value('posCtlPid.xKi', i_gains['X'])
+        scf.cf.param.set_value('posCtlPid.xKd', d_gains['X'])
+        
+        # Y Axis
+        scf.cf.param.set_value('posCtlPid.yKp', p_gains['Y'])
+        scf.cf.param.set_value('posCtlPid.yKi', i_gains['Y'])
+        scf.cf.param.set_value('posCtlPid.yKd', d_gains['Y'])
+        
+        # Z Axis
+        scf.cf.param.set_value('posCtlPid.zKp', p_gains['Z'])
+        scf.cf.param.set_value('posCtlPid.zKi', i_gains['Z'])
+        scf.cf.param.set_value('posCtlPid.zKd', d_gains['Z'])
+        
+        return 0  # Success
+    
+    except Exception as e:
+        # Handle any unexpected errors during PID modification
+        return 1  # Error code 1: Parameter setting failed

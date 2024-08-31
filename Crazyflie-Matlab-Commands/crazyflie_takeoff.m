@@ -35,4 +35,4 @@ function crazyflie_takeoff(scf, height, duration)
     else
         error('ERROR: Unexpected result from Python during takeoff.');
     end
-end
+end 
