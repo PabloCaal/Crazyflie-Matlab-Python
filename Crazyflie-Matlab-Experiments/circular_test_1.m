@@ -14,8 +14,8 @@ addpath('../Robotat-Matlab-Commands');
 origen = [0,0,1];
 
 % Generación de trayectoria
-N = 40;
-radio = 0.15;
+N = 10;
+radio = 0.2;
 theta = linspace(0, 2*pi, N);  
 x = origen(1) + radio * cos(theta);
 y = origen(2) + radio * sin(theta);
@@ -45,9 +45,7 @@ pause(2);
 pos_Crazyflie = zeros(N, 3); 
 
 for i = 1:N
-    crazyflie_move_to(crazyflie_1, x(i), y(i), z(i));
-    pos_Crazyflie(i,:) = crazyflie_get_position(crazyflie_1);
-    %pause(0.1);
+    crazyflie_send_position(crazyflie_1, x(i), y(i), z(i));
 end
 
 % Aterrizaje
@@ -58,7 +56,7 @@ crazyflie_disconnect(crazyflie_1);
 
 %% Graficar resultados
 % Mostrar los puntos
-plot3(pos_Crazyflie(3:20,1), pos_Crazyflie(3:20,2), pos_Crazyflie(3:20,3), 'bo-', 'DisplayName', 'Trayectoria Circular');
+plot3(pos_Crazyflie(1:N,1), pos_Crazyflie(1:N,2), pos_Crazyflie(1:N,3), 'bo-', 'DisplayName', 'Trayectoria Circular');
 xlabel('X (m)');
 ylabel('Y (m)');
 zlabel('Z (m)');

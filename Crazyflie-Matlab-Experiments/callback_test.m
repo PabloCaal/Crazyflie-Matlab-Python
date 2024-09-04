@@ -9,34 +9,52 @@
 addpath('../Crazyflie-Matlab-Commands');
 addpath('../Robotat-Matlab-Commands');
 
-%% Evento específico (Event callback)
+%%
+print_test();
+
 %% Conexión con Robotat y Crazyflie
 robotat = robotat_connect();
-crazyflie_1 = 1; % crazyflie_connect(8);
+crazyflie_1 = crazyflie_connect(8);
 agent_id = 50;
 
-%% Configurar listener y evento
-addlistener(robotat, 'update_crazyflie_position', @(src, event) robotat_update_crazyflie_position(src, event, robotat, crazyflie_1, agent_id));
-
-eventData = struct('Data', []);  % Los datos se obtendrán dentro del callback
-notify(robotat, 'update_crazyflie_position', eventData);
-
-%% Uso de event callback con disparador
+%% Event Callback
 configureCallback(robotat, "byte", 1, @(src, event) robotat_update_crazyflie_position(crazyflie_1, src, agent_id));
 pose = robotat_get_pose(robotat, agent_id)
-
-%% Comando de inicialización vacío
-configureCallback(robotat, "byte", 1, @(src, event) crazyflie_robotat_position_callback(crazyflie_1, src, agent_id));
-s.dst = 1; % DST_ROBOTAT
-s.cmd = 1; % CMD_GET_POSE
-s.pld = []; 
-write(robotat, uint8(jsonencode(s))); 
 
 %% Desactivar callback
 configureCallback(robotat, "off");
 
+
+
+
+
+%% Timer callback
+% Definir la función anónima que llama a tu función
+robotat = robotat_connect();
+crazyflie_1 = crazyflie_connect(8);
+agent_id = 50;
+
+callbackFcn = @(~,~) robotat_update_crazyflie_position(crazyflie_1, robotat, agent_id);
+
+% Crear el timer
+updateInterval = 0.5; % Intervalo en segundos
+positionUpdateTimer = timer('ExecutionMode', 'fixedRate', ... % Ejecutar en intervalos fijos
+                            'Period', updateInterval, ...     % Intervalo de tiempo entre ejecuciones
+                            'TimerFcn', callbackFcn);         % Función a ejecutar
+
+% Iniciar el timer
+start(positionUpdateTimer);
+
+%% Cuando ya no necesites el timer, puedes detenerlo y eliminarlo:
+stop(positionUpdateTimer);
+delete(positionUpdateTimer);
+
+%%
+robotat_disconnect(robotat);
+crazyflie_disconnect(crazyflie_1);
+
 %% Lecturas durante delay
-Duration = 5; % Duración en segundos
+Duration = 20; % Duración en segundos
 Period = 4; % Lecturas por segundo
 N = Duration*Period; % Cantidad de lecturas
 
@@ -52,11 +70,6 @@ for i = 1:N
     end 
     pause(1/Period); % Delay de freuencia de muestreo
 end
-
-configureCallback(robotat, "off");
-
-robotat_disconnect(robotat);
-crazyflie_disconnect(crazyflie_1);
 
 %% Gráfica 3D de lecturas
 x_Robotat = Pose_Crazyflie(:, 1);

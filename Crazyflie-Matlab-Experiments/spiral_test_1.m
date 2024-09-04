@@ -10,24 +10,14 @@ addpath('../Crazyflie-Matlab-Commands');
 addpath('../Robotat-Matlab-Commands');
 
 %% Ejecución de prueba de seguimiento de trayectoria en forma de Espiral
-% Conexión con Crazyflie
-dron_id = 8;    % ID del dron disponible 
-crazyflie_1 = crazyflie_connect(dron_id);
-pause(3);
-
-% Take off
-crazyflie_takeoff(crazyflie_1);
-pause(3);
-
-origen = crazyflie_get_position(crazyflie_1);
-%origen = [0,0,1];
+origen = [0,0,1];
 
 % Generación de trayectoria en forma de Espiral
-N = 200;
+N = 30;
 theta = linspace(0, 8*pi, N);             % Ángulo que describe la espiral (2 vueltas completas)
-radio_inicial = 1;                        % Radio inicial de la espiral
+radio_inicial = 0.4;                        % Radio inicial de la espiral
 altura_inicial = 0.5;                     % Altura inicial de la espiral
-altura_final = 2;                       % Altura final de la espiral
+altura_final = 1.5;                       % Altura final de la espiral
 
 x = origen(1) + (radio_inicial * (1 - (theta / max(theta)))) .* cos(theta); % Componente X
 y = origen(2) + (radio_inicial * (1 - (theta / max(theta)))) .* sin(theta); % Componente Y
@@ -45,10 +35,19 @@ axis([-1 1 -1 1 0 2]);
 view(3);
 
 %% Ejecución de la trayectoria generada
+% Conexión con Crazyflie
+dron_id = 8;    % ID del dron disponible 
+crazyflie_1 = crazyflie_connect(dron_id);
+pause(3);
+
+% Take off
+crazyflie_takeoff(crazyflie_1);
+pause(3);
+
 pos_Crazyflie = zeros(N, 3); 
 
 for i = 1:N
-    crazyflie_send_position_2(crazyflie_1, x(i), y(i), z(i));  % Enviar posición deseada al dron
+    crazyflie_send_position(crazyflie_1, x(i), y(i), z(i));  % Enviar posición deseada al dron
     pos_Crazyflie(i,:) = crazyflie_get_position(crazyflie_1); % Obtener la posición real del dron
     %pause(0.1);
 end
@@ -67,8 +66,6 @@ ylabel('Y (m)');
 zlabel('Z (m)');
 title('Trayectoria Espiral seguida por el Crazyflie');
 grid on;
-axis igual;
-
 % Ajustar el espacio 3D
 axis equal;
 axis([-1 1 -1 1 0 2]);

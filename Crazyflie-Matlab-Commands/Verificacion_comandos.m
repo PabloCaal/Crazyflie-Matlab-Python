@@ -21,13 +21,13 @@ crazyflie_land(crazyflie_1);
 XYZ = crazyflie_get_position(crazyflie_1)
 
 %% Función de envío de posición
-crazyflie_move_to(crazyflie_1, -0.2, 0, 0.5);
+crazyflie_move_to(crazyflie_1, 0.2, 0, 0.7);
 
 %% Función para recuperar la pose del Crazyflie
 pose = crazyflie_get_pose(crazyflie_1);
 
 %% Actualización de posición con fuente externa
-crazyflie_update_position(crazyflie_1, 0, 0, 0);
+crazyflie_update_position(crazyflie_1, 1, 3, 0);
 
 %% Lectura de constantes del controlador PID
 PID = crazyflie_get_pid(crazyflie_1);

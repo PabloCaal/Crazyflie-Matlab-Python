@@ -22,9 +22,6 @@ cflib.crtp.init_drivers(enable_debug_driver=False)
 
 logging.basicConfig(level=logging.CRITICAL)
    
-def error_callback(error):
-    print(f"Link error: {error}")
-
 def connect(uri):
     """
     Connects to the Crazyflie at the specified URI.
@@ -59,6 +56,9 @@ def connect(uri):
 def disconnect(scf):
     scf.close_link()
 
+def detect_flow_deck(scf):
+    return 0
+
 def takeoff(scf, height, duration):
     """
     Commands the Crazyflie to take off to a specified height.
@@ -76,7 +76,7 @@ def takeoff(scf, height, duration):
     """
     try:
         # Get the current position using the get_position function
-        position = get_position(scf)
+        position = get_pose(scf)
         current_z = position[2]  # Extract the current altitude (z)
 
         # Check if the Crazyflie is already in the air (e.g., above 0.1 meters)
@@ -114,7 +114,7 @@ def land(scf, height, duration):
     """
     try:
         # Get the current position using the get_position function
-        position = get_position(scf)
+        position = get_pose(scf)
         current_z = position[2]  # Extract the current altitude (z)
 
         # Check if the Crazyflie is already on the ground (e.g., below 0.1 meters)
@@ -138,17 +138,17 @@ def land(scf, height, duration):
         print(f"ERROR: An error occurred during landing: {str(e)}")
         return 2  # Error code 2: General error
 
-def move_to(scf, x, y, z, velocity=0.5):
+def send_position(scf, x, y, z, velocity=0.5):
     """
-    Move the Crazyflie to the specified position (x, y, z) using MotionCommander.
-    
+    Move the Crazyflie to the specified position (x, y, z) using HighLevelCommander.
+
     Parameters:
     scf (SyncCrazyflie): The SyncCrazyflie object representing the connection to the Crazyflie.
     x (float): The target x-coordinate in meters.
     y (float): The target y-coordinate in meters.
     z (float): The target z-coordinate in meters.
-    velocity (float): The velocity of the movement in meters per second (default is 0.5 m/s).
-    
+    velocity (float): The desired speed in meters per second (default is 0.5 m/s).
+
     Returns:
     int: A numeric code indicating the result of the position command.
          0 - Successful position command
@@ -156,66 +156,31 @@ def move_to(scf, x, y, z, velocity=0.5):
          2 - General error occurred during movement
     """
     try:
-        # Validate input parameters
-        if not all(isinstance(coord, (int, float)) for coord in [x, y, z]) or velocity <= 0.0:
-            return 1  # Error code 1: Invalid input parameters
+        commander = scf.cf.high_level_commander
 
-        # Use MotionCommander to move to the specified position
-        with MotionCommander(scf) as mc:
-            mc.move_distance(x, y, z, velocity)
+        # Obtener la posición actual del Crazyflie
+        current_position = get_pose(scf)
+        current_x, current_y, current_z = current_position[0], current_position[1], current_position[2]
+        
+        # Calcular la distancia entre la posición actual y la posición objetivo
+        distance = ((x - current_x)**2 + (y - current_y)**2 + (z - current_z)**2)**0.5
+        
+        # Calcular la duración basada en la distancia y la velocidad
+        duration = distance / velocity
+        
+        # Enviar el comando go_to al Crazyflie
+        commander.go_to(x, y, z, yaw=0.0, duration_s=duration)
 
-        return 0  # Success: Position command completed successfully
+        # Wait for the landing to complete
+        time.sleep(duration)
+        
+        return duration  # Success: Position command completed successfully
 
     except Exception as e:
-        # Handle any unexpected errors during the position command
-        print(f"ERROR: An error occurred during the position command: {str(e)}")
-        return 2  # Error code 2: General error
+        return 0
 
-def get_position(scf):
-    """
-    Retrieves the current position of the Crazyflie.
-    
-    Parameters:
-    scf (SyncCrazyflie): The SyncCrazyflie object representing the connection to the Crazyflie.
-    
-    Returns:
-    list: A list containing the pose of the Crazyflie as [x, y, z].
-          x, y, z are the coordinates in meters.
-    int: A numeric code indicating an error if retrieval fails.
-         1 - Error in retrieving data
-         2 - General error occurred
-    """
-    position_log_config = LogConfig(name='Position', period_in_ms=100)
-    position_log_config.add_variable('stateEstimate.x', 'float')
-    position_log_config.add_variable('stateEstimate.y', 'float')
-    position_log_config.add_variable('stateEstimate.z', 'float')
-
-    position = {'x': 0.0, 'y': 0.0, 'z': 0.0}
-    new_data = Event()
-
-    def position_callback(timestamp, data, logconf):
-        position['x'] = data['stateEstimate.x']
-        position['y'] = data['stateEstimate.y']
-        position['z'] = data['stateEstimate.z']
-        new_data.set()
-
-    position_log_config.data_received_cb.add_callback(position_callback)
-
-    try:
-        existing_configs = scf.cf.log.log_blocks
-        for config in existing_configs:
-            if config.name == 'Position':
-                config.stop()
-                config.delete()
-    except AttributeError:
-        pass  
-
-    scf.cf.log.add_config(position_log_config)
-    position_log_config.start()
-    new_data.wait()
-    position_log_config.stop()
-
-    return [position['x'], position['y'], position['z']]
+def move_to_position(scf, x, y, z, velocity = 0.5):
+    return 0
 
 def get_pose(scf):
     """
@@ -311,6 +276,12 @@ def update_position(scf, x, y, z):
         # print(f"ERROR: An error occurred during the position update: {str(e)}")
         return 2  # Error code 2: General error
     
+def set_absolute_position():
+    return 0
+
+def set_absolute_pose():
+    return 0
+
 def get_pid_values(scf):
     """
     Retrieves the current PID controller parameters from the Crazyflie for X, Y, Z axes.
@@ -350,6 +321,9 @@ def get_pid_values(scf):
         # Retornar un código de error general
         return 1  # Código de error general
 
+def get_pid_controller_values(scf):
+    return 0
+
 def modify_pid(scf, p_gains, i_gains, d_gains):
     """
     Modifies the PID controller parameters on the Crazyflie using an existing connection.
@@ -386,3 +360,16 @@ def modify_pid(scf, p_gains, i_gains, d_gains):
     except Exception as e:
         # Handle any unexpected errors during PID modification
         return 1  # Error code 1: Parameter setting failed
+
+def set_pid_controller_values(scf, p_gains, i_gains, d_gains):
+    return 0
+
+def get_pid_x_values(scf):
+    return 0
+
+def set_pid_x_values(scf):
+    return 0
+
+def print_test():
+    print("Esta es una prueba de print en Python desde Matlab")
+    return 0

@@ -117,3 +117,38 @@ def update_position(scf, x, y, z):
     scf.cf.extpos.send_extpos(x, y, z)
     time.sleep(0.1) 
     return True
+
+
+# No funciona:
+def move_to(scf, x, y, z, velocity):
+    """
+    Move the Crazyflie to the specified position (x, y, z) using MotionCommander.
+    
+    Parameters:
+    scf (SyncCrazyflie): The SyncCrazyflie object representing the connection to the Crazyflie.
+    x (float): The target x-coordinate in meters.
+    y (float): The target y-coordinate in meters.
+    z (float): The target z-coordinate in meters.
+    velocity (float): The velocity of the movement in meters per second (default is 0.5 m/s).
+    
+    Returns:
+    int: A numeric code indicating the result of the position command.
+         0 - Successful position command
+         1 - Invalid position or velocity parameters
+         2 - General error occurred during movement
+    """
+    try:
+        # Validate input parameters
+        if not all(isinstance(coord, (int, float)) for coord in [x, y, z]) or velocity <= 0.0:
+            return 1  # Error code 1: Invalid input parameters
+
+        # Use MotionCommander to move to the specified position
+        with MotionCommander(scf) as mc:
+            mc.move_distance(x, y, z, velocity)
+
+        return 0  # Success: Position command completed successfully
+
+    except Exception as e:
+        # Handle any unexpected errors during the position command
+        print(f"ERROR: An error occurred during the position command: {str(e)}")
+        return 2  # Error code 2: General error
