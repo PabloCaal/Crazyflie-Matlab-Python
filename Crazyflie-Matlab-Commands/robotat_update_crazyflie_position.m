@@ -1,5 +1,5 @@
 function robotat_update_crazyflie_position(scf, tcp_obj, agents_ids)
-    max_retries = 3; % Número máximo de reintentos en caso de fallo
+    max_retries = 3; 
     for attempt = 1:max_retries
         try
             timeout_count = 0;
@@ -22,19 +22,7 @@ function robotat_update_crazyflie_position(scf, tcp_obj, agents_ids)
                     % Intentar de nuevo
                     continue;
                 else
-                    data = char(read(tcp_obj));
-                    if isempty(data)
-                        disp('ERROR: Received empty data.');
-                        continue;
-                    end
-                    % Intentar decodificar el JSON recibido
-                    absolute_position = jsondecode(data);
-                    
-                    if numel(absolute_position) < 7
-                        disp('ERROR: Incomplete JSON data.');
-                        continue;
-                    end
-
+                    absolute_position = jsondecode(char(read(tcp_obj)));
                     absolute_position = reshape(absolute_position, [7, numel(agents_ids)])';
 
                     x = absolute_position(1);

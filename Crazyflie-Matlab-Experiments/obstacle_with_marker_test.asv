@@ -19,7 +19,8 @@ obstacle1 = robotat_get_pose(robotat, obstacle1_id);
 
 %% Punto de takeoff
 takeoff = [origin(1), origin(2), origin(3)+0.5];  
-final_point = [takeoff(1), takeoff(2), takeoff(3)+0.2];
+% Punto final previo al aterrizaje
+final_point = [takeoff(1), takeoff(2), takeoff(3)+0.5];
 
 % Definir geometría del obstáculo
 diameter = 0.25;
@@ -27,7 +28,9 @@ radius = diameter/2;
 theta = linspace(0, 2*pi, 7);
 circle_y = radius * cos(theta);
 circle_z = radius * sin(theta);
-circle_x = zeros(size(circle_y));
+circle_x = zeros(size(circle_y));  % Los puntos en X están centrados
+
+% Combinar las coordenadas X, Y y Z en una matriz 3xN
 circle_points = [circle_x; circle_y; circle_z];
 
 % Obtener el ángulo de yaw (6to valor del array) del obstáculo
@@ -52,13 +55,13 @@ plot3(obstacle1(1) + rotated_circle(1, :), ...
       'r', 'LineWidth', 2);
 
 % Calcular el punto pre-obstacle desplazado en función del yaw del obstáculo
-pre_obstacle_distance = 0.3;  
+pre_obstacle_distance = 0.3;  % Distancia de desplazamiento antes de atravesar el obstáculo
 pre_obstacle = [obstacle1(1) - pre_obstacle_distance * cos(yaw_obstacle), ...
                 obstacle1(2) + pre_obstacle_distance * sin(yaw_obstacle), ...
                 obstacle1(3)];
 
 post_obstacle_distance = 0.3;
-post_obstacle = [obstacle1(1) + post_obstacle_distance * cos(yaw_obstacle), ...
+pre_obstacle = [obstacle1(1) + post_obstacle_distance * cos(yaw_obstacle), ...
                 obstacle1(2) - post_obstacle_distance * sin(yaw_obstacle), ...
                 obstacle1(3)];
 
@@ -66,7 +69,7 @@ post_obstacle = [obstacle1(1) + post_obstacle_distance * cos(yaw_obstacle), ...
 plot3(origin(1), origin(2), origin(3), 'ko', 'MarkerSize', 10, 'MarkerFaceColor', 'k');
 plot3(takeoff(1), takeoff(2), takeoff(3), 'mo', 'MarkerSize', 10, 'MarkerFaceColor', 'm');
 plot3(pre_obstacle(1), pre_obstacle(2), pre_obstacle(3), 'go', 'MarkerSize', 10, 'MarkerFaceColor', 'g');
-plot3(post_obstacle(1), post_obstacle(2), post_obstacle(3), 'go', 'MarkerSize', 10, 'MarkerFaceColor', 'g');
+plot3(pre_obstacle(1), pre_obstacle(2), pre_obstacle(3), 'go', 'MarkerSize', 10, 'MarkerFaceColor', 'g');
 plot3(final_point(1), final_point(2), final_point(3), 'bo', 'MarkerSize', 10, 'MarkerFaceColor', 'c');
 
 text(obstacle1(1), obstacle1(2), obstacle1(3), 'Obstacle', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right');
@@ -75,10 +78,10 @@ text(takeoff(1), takeoff(2), takeoff(3), 'Takeoff', 'VerticalAlignment', 'bottom
 text(pre_obstacle(1), pre_obstacle(2), pre_obstacle(3), 'Pre-Obstacle', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right');
 text(final_point(1), final_point(2), final_point(3), 'Final Point', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'right');
 
-trajectory_points = [takeoff; pre_obstacle; obstacle1(1:3); post_obstacle; final_point];
+trajectory_points = [takeoff; pre_obstacle; obstacle1(1:3); final_point];
 
 % Interpolación
-n_interp = 8;
+n_interp = 10;
 t = 1:size(trajectory_points, 1); 
 t_interp = linspace(1, t(end), n_interp);  
 x_interp = interp1(t, trajectory_points(:, 1), t_interp, 'pchip');  % 'pchip' para interpolación cúbica
