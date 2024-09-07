@@ -19,6 +19,18 @@ pause(2);
 crazyflie_takeoff(crazyflie_1);
 pause(3);
 
+% crazyflie_send_position(crazyflie_1, -0.1, 0.0, 0.5);
+% pause(2);
+% 
+% crazyflie_send_position(crazyflie_1, 0.2, -0.4, 0.3);
+% pause(2);
+% 
+% crazyflie_send_position(crazyflie_1, -0.4, -0.4, 0.3);
+% pause(2);
+% 
+% crazyflie_send_position(crazyflie_1, 0.0, 0.0, 0.5);
+% pause(0.5);
+
 % Land
 crazyflie_land(crazyflie_1);
 pause(2);
